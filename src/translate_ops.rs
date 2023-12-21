@@ -54,9 +54,10 @@ fn translate_fn_call(fn_name: String, location: Location) -> Vec<AstNode> {
 
         "in" => translate_op_in(location),
 
+        "print" => translate_op_print(location),
 
 
-        _ => unreachable!(),
+        other => unreachable!("{other}"),
     }
 
 }
@@ -164,6 +165,17 @@ fn translate_op_range(location: Location) -> Vec<AstNode> {
     actions.push(AstNode::Action { location, name: "empty_list".to_string(), value:None });
     actions.push(AstNode::Action { location, name: "swap".to_string(), value:None });
     actions.push(AstNode::Action { location, name: "eval".to_string(), value:None });
+
+    return actions;
+}
+
+#[rustfmt::skip]
+fn translate_op_print(location: Location) -> Vec<AstNode> {
+    let mut actions = vec![];
+
+    actions.push(AstNode::Action { location, name: "print".to_string(), value:None });
+    actions.push(AstNode::Action { location, name: "mask".to_string(), value: Some(ActionValue::Bookkeeper("v".to_string())) });
+
 
     return actions;
 }
