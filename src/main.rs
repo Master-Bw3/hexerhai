@@ -16,6 +16,8 @@ fn main() -> Result<(), Box<EvalAltResult>> {
     //will be implemented eventually
     engine.disable_symbol("&&");
     engine.disable_symbol("||");
+    engine.disable_symbol("<<");
+    engine.disable_symbol(">>");
 
 
     let ast = engine.compile(source)?;

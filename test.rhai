@@ -1,7 +1,7 @@
-    let a = 1;
+let a = 1;
 
-    let x = 12 + a;
+let x = 12 + a;
 
 
-    x = 5;
+x = 5;
 print(x + x + 2);
