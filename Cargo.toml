@@ -1,0 +1,10 @@
+[package]
+name = "hexerhai"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rhai = { version = "1.16.3", features = ["no_time", "only_i32"] }
+hexagon = { git = "https://github.com/Master-Bw3/Hexagon", rev = "07cc9f7" }
