@@ -91,6 +91,7 @@ fn flatten_expression(expression: Expr) -> Vec<FlatNode> {
         Expr::StringConstant(val, position) => {
             flattened_ast.push(FlatNode::StringLiteral(val.to_string(), position))
         }
+        Expr::Unit(position) => flattened_ast.push(FlatNode::Unit(position)),
         Expr::DynamicConstant(val, position) => {
             flattened_ast.push(FlatNode::DynamicConstant(val, position))
         }
@@ -106,20 +107,9 @@ fn flatten_expression(expression: Expr) -> Vec<FlatNode> {
         }
         Expr::InterpolatedString(val, position) => {
             flattened_ast.append(&mut flatten_interpolated_string(val, position));
-
-            //     val.into_iter().rev().enumerate().for_each(|(i, v)| {
-            //         if i < len - 1 {
-            //             flattened_ast.push(FlatNode::Op(Op::FnCall("string/add".to_string()), position));
-            //             flattened_ast.push(FlatNode::Op(Op::FnCall("string/iota".to_string()), position));
-            //         }
-            //         flattened_ast.append(&mut flatten_expression(v));
-
-            //     }
-            // );
         }
 
         Expr::Map(_, _) => todo!(),
-        Expr::Unit(_) => todo!(),
 
         Expr::ThisPtr(_) => todo!(),
         Expr::Property(_, _) => todo!(),

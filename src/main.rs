@@ -2,8 +2,11 @@ use std::{collections::HashMap, fs};
 
 use hexagon::{
     compiler::{compile_to_iotas, nbt::gen_give_cmd},
+    interpreter::{error::print_interpreter_error, interpret},
+    iota::Iota,
     parse_config::Config,
-    pattern_registry::{PatternRegistry, PatternRegistryExt}, interpreter::{interpret, error::print_interpreter_error}, parser::AstNode, iota::Iota,
+    parser::AstNode,
+    pattern_registry::{PatternRegistry, PatternRegistryExt},
 };
 use rhai::{BinaryExpr, Engine, EvalAltResult, Expr, Expression, FnCallExpr, Ident, Stmt};
 use translate::translate_flattened_ast;
@@ -12,8 +15,8 @@ use crate::flatten_ast::flattern_ast;
 
 pub mod flatten_ast;
 pub mod translate;
-pub mod translate_ops;
 pub mod translate_dynamic;
+pub mod translate_ops;
 
 fn main() -> Result<(), Box<EvalAltResult>> {
     let mut engine = Engine::new();
@@ -30,11 +33,9 @@ fn main() -> Result<(), Box<EvalAltResult>> {
 
     engine.eval_ast(&ast)?;
 
-
     println!("Ast: {:#?}", ast.statements());
 
     println!("Flattened Ast: {:?}", flattern_ast(ast.statements()));
-
 
     compile()?;
 
@@ -86,7 +87,6 @@ fn compile() -> Result<(), Box<EvalAltResult>> {
 }
 
 fn run() -> Result<(), Box<EvalAltResult>> {
-
     let mut engine = Engine::new();
 
     let source = fs::read_to_string("./test.rhai").unwrap();
@@ -107,18 +107,24 @@ fn run() -> Result<(), Box<EvalAltResult>> {
         great_spell_sigs: PatternRegistry::gen_default_great_sigs(),
     };
 
-    let interpreter_result = interpret(AstNode::Program(translated_ast), &config, HashMap::new(), &source, "");
+    let interpreter_result = interpret(
+        AstNode::Program(translated_ast),
+        &config,
+        HashMap::new(),
+        &source,
+        "",
+    );
 
-        match interpreter_result {
-            Ok(result) => println!(
-                "\nresult: {} \n {:?}",
-                result.stack.display(),
-                result.buffer
-            ),
-            Err(err) => {
-                print_interpreter_error(err, &source, "test.rhai");
-            }
-        };
+    match interpreter_result {
+        Ok(result) => println!(
+            "\nresult: {} \n {:?}",
+            result.stack.display(),
+            result.buffer
+        ),
+        Err(err) => {
+            print_interpreter_error(err, &source, "test.rhai");
+        }
+    };
 
-        Ok(())
+    Ok(())
 }

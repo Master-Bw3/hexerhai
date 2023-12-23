@@ -1,10 +1,9 @@
 //! This script runs for-loops.
 
-let x = 1;
+let x = ();
 
-let str = `hello: ${x} hii ${x} bye`;
 
-print(str);
+print(x);
 
 
 

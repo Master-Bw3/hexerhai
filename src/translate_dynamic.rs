@@ -1,9 +1,10 @@
-use std::rc::Rc;
-use hexagon::{parser::{AstNode, OpName}, iota::{Iota, hex_casting::null::NullIota}};
+use hexagon::{
+    iota::{hex_casting::null::NullIota, Iota},
+    parser::{AstNode, OpName},
+};
 use im::vector;
 use rhai::{Dynamic, Position, Shared};
-
-
+use std::rc::Rc;
 
 pub fn translate_dynamic_to_iota(val: Box<Dynamic>, position: Position) -> Rc<dyn Iota> {
     if val.is_array() {
