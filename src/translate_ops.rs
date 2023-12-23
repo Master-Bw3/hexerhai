@@ -24,6 +24,8 @@ pub fn translate_op(op: Op, location: Location) -> Vec<AstNode> {
 #[rustfmt::skip]
 fn translate_fn_call(fn_name: String, location: Location) -> Vec<AstNode> {
     match fn_name.as_str() {
+
+        //operators
         "==" => vec![AstNode::Action { location, name: "equals".to_string(), value: None }],
         "!=" => vec![AstNode::Action { location, name: "not_equals".to_string(), value: None }],
         ">" => vec![AstNode::Action { location, name: "greater".to_string(), value: None }],
@@ -54,10 +56,11 @@ fn translate_fn_call(fn_name: String, location: Location) -> Vec<AstNode> {
 
         "in" => translate_op_in(location),
 
+        //builtin functions
         "print" => translate_op_print(location),
 
-
-        other => unreachable!("{other}"),
+        //TODO: handle user-defined functions
+        _ => vec![AstNode::Action { location, name: fn_name, value: None }],
     }
 
 }

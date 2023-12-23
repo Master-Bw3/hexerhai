@@ -1,4 +1,4 @@
-use rhai::{Expr, FnCallExpr, Ident, Position, Stmt};
+use rhai::{Expr, FnCallExpr, Ident, Position, Stmt, Dynamic};
 
 pub fn flattern_ast(ast: &[Stmt]) -> Vec<FlatNode> {
     let mut flattened_ast: Vec<FlatNode> = vec![];
@@ -87,8 +87,9 @@ fn flatten_expression(expression: Expr) -> Vec<FlatNode> {
         Expr::StringConstant(val, position) => {
             flattened_ast.push(FlatNode::StringLiteral(val.to_string(), position))
         }
+        Expr::DynamicConstant(val, position) => flattened_ast.push(FlatNode::DynamicConstant(val, position)),
+
         Expr::InterpolatedString(_, _) => todo!(),
-        Expr::DynamicConstant(_, _) => todo!(),
 
         Expr::Array(_, _) => todo!(),
         Expr::Map(_, _) => todo!(),
@@ -137,5 +138,6 @@ pub enum FlatNode {
     NumberLiteral(f64, Position),
     BooleanLiteral(bool, Position),
     StringLiteral(String, Position),
+    DynamicConstant(Box<Dynamic>, Position),
     Unit(Position),
 }
