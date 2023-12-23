@@ -93,7 +93,6 @@ fn translate_op_and(location: Location) -> Vec<AstNode> {
 
     //if it is, use boolean operator. otherwise, use bitwise operator
     actions.push(AstNode::Action { location, name: "open_paren".to_string(), value:None });
-    actions.push(AstNode::Action { location, name: "close_paren".to_string(), value:None });
     actions.push(AstNode::Action { location, name: "and".to_string(), value:None });
     actions.push(AstNode::Action { location, name: "and_bit".to_string(), value:None });
     actions.push(AstNode::Action { location, name: "close_paren".to_string(), value:None });
@@ -120,7 +119,6 @@ fn translate_op_or(location: Location) -> Vec<AstNode> {
 
     //if it is, use boolean operator. otherwise, use bitwise operator
     actions.push(AstNode::Action { location, name: "open_paren".to_string(), value:None });
-    actions.push(AstNode::Action { location, name: "close_paren".to_string(), value:None });
     actions.push(AstNode::Action { location, name: "and".to_string(), value:None });
     actions.push(AstNode::Action { location, name: "and_bit".to_string(), value:None });
     actions.push(AstNode::Action { location, name: "close_paren".to_string(), value:None });

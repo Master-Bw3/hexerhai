@@ -19,6 +19,8 @@ pub fn translate_flattened_ast(ast: Vec<FlatNode>) -> Vec<AstNode> {
         translated_ast.append(&mut translate_node(node));
     }
 
+    println!("translated:\n{:?}", translated_ast);
+
     return translated_ast;
 }
 
@@ -54,6 +56,28 @@ pub fn translate_node(node: FlatNode) -> Vec<AstNode> {
             location: position_to_location(position),
             name: OpName::IntroEmbed,
             arg: Some(OpValue::Iota(translate_dynamic_to_iota(val, position))),
+        }),
+        FlatNode::IfBlock {
+            condition,
+            succeed,
+            fail,
+            position,
+        } => translated.push(AstNode::IfBlock {
+            condition: Box::new(AstNode::Block {
+                external: false,
+                nodes: condition.into_iter().flat_map(translate_node).collect(),
+            }),
+            succeed: Box::new(AstNode::Block {
+                external: false,
+                nodes: succeed.into_iter().flat_map(translate_node).collect(),
+            }),
+            fail: fail.map(|f| {
+                Box::new(AstNode::Block {
+                    external: false,
+                    nodes: f.into_iter().flat_map(translate_node).collect(),
+                })
+            }),
+            location: position_to_location(position),
         }),
     };
 

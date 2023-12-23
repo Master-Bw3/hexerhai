@@ -11,7 +11,7 @@ use hexagon::{
 use rhai::{BinaryExpr, Engine, EvalAltResult, Expr, Expression, FnCallExpr, Ident, Stmt};
 use translate::translate_flattened_ast;
 
-use crate::flatten_ast::flattern_ast;
+use crate::flatten_ast::flatten_statements;
 
 pub mod flatten_ast;
 pub mod translate;
@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<EvalAltResult>> {
 
     println!("Ast: {:#?}", ast.statements());
 
-    println!("Flattened Ast: {:?}", flattern_ast(ast.statements()));
+    println!("Flattened Ast: {:?}", flatten_statements(ast.statements()));
 
     compile()?;
 
@@ -57,7 +57,7 @@ fn compile() -> Result<(), Box<EvalAltResult>> {
 
     let ast = engine.compile(source)?;
 
-    let translated_ast = translate_flattened_ast(flattern_ast(ast.statements()));
+    let translated_ast = translate_flattened_ast(flatten_statements(ast.statements()));
 
     let config = Config {
         libraries: HashMap::new(),
@@ -99,7 +99,7 @@ fn run() -> Result<(), Box<EvalAltResult>> {
 
     let ast = engine.compile(&source)?;
 
-    let translated_ast = translate_flattened_ast(flattern_ast(ast.statements()));
+    let translated_ast = translate_flattened_ast(flatten_statements(ast.statements()));
 
     let config = Config {
         libraries: HashMap::new(),

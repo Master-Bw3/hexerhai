@@ -1,7 +1,9 @@
-use rhai::{Dynamic, Expr, FnCallExpr, Ident, Position, Stmt};
+use std::ops::Not;
+
+use rhai::{Dynamic, Expr, FlowControl, FnCallExpr, Ident, Position, Stmt};
 use smallvec::SmallVec;
 
-pub fn flattern_ast(ast: &[Stmt]) -> Vec<FlatNode> {
+pub fn flatten_statements(ast: &[Stmt]) -> Vec<FlatNode> {
     let mut flattened_ast: Vec<FlatNode> = vec![];
 
     for statement in ast {
@@ -26,9 +28,11 @@ pub fn flattern_ast(ast: &[Stmt]) -> Vec<FlatNode> {
             }
             Stmt::FnCall(expr, position) => flattened_ast_statment
                 .append(&mut flatten_fn_call_expression(*expr.clone(), *position)),
+            Stmt::If(data, position) => {
+                flattened_ast_statment.append(&mut flatten_if(data, *position))
+            }
 
             Stmt::Noop(_) => todo!(),
-            Stmt::If(_, _) => todo!(),
             Stmt::Switch(_, _) => todo!(),
             Stmt::While(_, _) => todo!(),
             Stmt::Do(_, _, _) => todo!(),
@@ -48,6 +52,30 @@ pub fn flattern_ast(ast: &[Stmt]) -> Vec<FlatNode> {
     }
 
     return flattened_ast;
+}
+
+fn flatten_if(data: &Box<FlowControl>, position: Position) -> Vec<FlatNode> {
+    let condition = flatten_expression(data.expr.clone())
+        .into_iter()
+        .rev()
+        .collect::<Vec<_>>();
+    let succeed = flatten_statements(data.body.statements());
+
+    let fail = if data.branch.is_empty().not() {
+        Some(flatten_statements(data.branch.statements()))
+    } else {
+        None
+    };
+
+    return vec![
+        FlatNode::Op(Op::FnCall("eval".to_string()), position),
+        FlatNode::IfBlock {
+            condition,
+            succeed,
+            fail,
+            position,
+        },
+    ];
 }
 
 fn flatten_var(data: (Ident, Expr)) -> Vec<FlatNode> {
@@ -184,6 +212,12 @@ pub enum Op {
 #[derive(Debug)]
 pub enum FlatNode {
     Op(Op, Position),
+    IfBlock {
+        condition: Vec<FlatNode>,
+        succeed: Vec<FlatNode>,
+        fail: Option<Vec<FlatNode>>,
+        position: Position,
+    },
     NumberLiteral(f64, Position),
     BooleanLiteral(bool, Position),
     StringLiteral(String, Position),
