@@ -291,6 +291,7 @@ dependencies = [
  "hexagon",
  "im",
  "rhai",
+ "smallvec",
 ]
 
 [[package]]

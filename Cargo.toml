@@ -9,3 +9,4 @@ edition = "2021"
 rhai = { version = "1.16.3", features = ["no_time", "only_i32", "internals"] }
 hexagon = { git = "https://github.com/Master-Bw3/Hexagon", rev = "cb5da3d" }
 im = "15.1.0"
+smallvec = "1.11.2"

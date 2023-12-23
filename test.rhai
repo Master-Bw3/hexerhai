@@ -2,9 +2,9 @@
 
 let x = 1;
 
-let arr = [true, 123.456, "hello", 3, 42, [5], x + 2];
+let str = `hello: ${x} hii ${x} bye`;
 
-print(arr);
+print(str);
 
 
 

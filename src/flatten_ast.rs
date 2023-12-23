@@ -1,4 +1,5 @@
-use rhai::{Expr, FnCallExpr, Ident, Position, Stmt, Dynamic};
+use rhai::{Dynamic, Expr, FnCallExpr, Ident, Position, Stmt};
+use smallvec::SmallVec;
 
 pub fn flattern_ast(ast: &[Stmt]) -> Vec<FlatNode> {
     let mut flattened_ast: Vec<FlatNode> = vec![];
@@ -13,7 +14,8 @@ pub fn flattern_ast(ast: &[Stmt]) -> Vec<FlatNode> {
             }
 
             Stmt::Assignment(data) => {
-                let (variable, position) = if let Expr::Variable(ref var_data, _, pos) = data.1.lhs {
+                let (variable, position) = if let Expr::Variable(ref var_data, _, pos) = data.1.lhs
+                {
                     (var_data.3.clone().to_string(), pos)
                 } else {
                     panic!()
@@ -22,9 +24,8 @@ pub fn flattern_ast(ast: &[Stmt]) -> Vec<FlatNode> {
                 flattened_ast_statment.push(FlatNode::Op(Op::Store(variable), position));
                 flattened_ast_statment.append(&mut flatten_expression(data.1.rhs.clone()));
             }
-            Stmt::FnCall(expr, position) => {
-                flattened_ast_statment.append(&mut flatten_fn_call_expression(*expr.clone(), *position))
-            }
+            Stmt::FnCall(expr, position) => flattened_ast_statment
+                .append(&mut flatten_fn_call_expression(*expr.clone(), *position)),
 
             Stmt::Noop(_) => todo!(),
             Stmt::If(_, _) => todo!(),
@@ -55,7 +56,10 @@ fn flatten_var(data: (Ident, Expr)) -> Vec<FlatNode> {
     let identifier = data.0;
     let expression = data.1;
 
-    flattened_ast.push(FlatNode::Op(Op::Store(identifier.name.to_string()), identifier.pos));
+    flattened_ast.push(FlatNode::Op(
+        Op::Store(identifier.name.to_string()),
+        identifier.pos,
+    ));
     flattened_ast.append(&mut flatten_expression(expression));
 
     return flattened_ast;
@@ -87,14 +91,32 @@ fn flatten_expression(expression: Expr) -> Vec<FlatNode> {
         Expr::StringConstant(val, position) => {
             flattened_ast.push(FlatNode::StringLiteral(val.to_string(), position))
         }
-        Expr::DynamicConstant(val, position) => flattened_ast.push(FlatNode::DynamicConstant(val, position)),
+        Expr::DynamicConstant(val, position) => {
+            flattened_ast.push(FlatNode::DynamicConstant(val, position))
+        }
         Expr::Array(val, position) => {
-            flattened_ast.push(FlatNode::Op(Op::FnCall("last_n_list".to_string()), position));
+            flattened_ast.push(FlatNode::Op(
+                Op::FnCall("last_n_list".to_string()),
+                position,
+            ));
             flattened_ast.push(FlatNode::NumberLiteral(val.len() as f64, position));
-            val.into_iter().rev().for_each(|v| flattened_ast.append(&mut flatten_expression(v)));
-        },
+            val.into_iter()
+                .rev()
+                .for_each(|v| flattened_ast.append(&mut flatten_expression(v)));
+        }
+        Expr::InterpolatedString(val, position) => {
+            flattened_ast.append(&mut flatten_interpolated_string(val, position));
 
-        Expr::InterpolatedString(_, _) => todo!(),
+            //     val.into_iter().rev().enumerate().for_each(|(i, v)| {
+            //         if i < len - 1 {
+            //             flattened_ast.push(FlatNode::Op(Op::FnCall("string/add".to_string()), position));
+            //             flattened_ast.push(FlatNode::Op(Op::FnCall("string/iota".to_string()), position));
+            //         }
+            //         flattened_ast.append(&mut flatten_expression(v));
+
+            //     }
+            // );
+        }
 
         Expr::Map(_, _) => todo!(),
         Expr::Unit(_) => todo!(),
@@ -115,10 +137,43 @@ fn flatten_expression(expression: Expr) -> Vec<FlatNode> {
     return flattened_ast;
 }
 
+fn flatten_interpolated_string(val: Box<SmallVec<[Expr; 5]>>, position: Position) -> Vec<FlatNode> {
+    val.into_iter()
+        .enumerate()
+        .flat_map(|(i, v)| {
+            let mut intrs = vec![];
+            let expr = &mut flatten_expression(v);
+
+            let mut is_string = false;
+            if expr.len() == 1 {
+                if let FlatNode::StringLiteral(..) = expr[0] {
+                    is_string = true;
+                }
+            };
+
+            intrs.append(expr);
+            if i > 0 {
+                if !is_string {
+                    intrs.push(FlatNode::Op(
+                        Op::FnCall("string/iota".to_string()),
+                        position,
+                    ));
+                }
+                intrs.push(FlatNode::Op(Op::FnCall("string/add".to_string()), position));
+            }
+            intrs
+        })
+        .rev()
+        .collect()
+}
+
 fn flatten_fn_call_expression(expression: FnCallExpr, position: Position) -> Vec<FlatNode> {
     let mut flattened_ast: Vec<FlatNode> = vec![];
 
-    flattened_ast.push(FlatNode::Op(Op::FnCall(expression.name.to_string()), position));
+    flattened_ast.push(FlatNode::Op(
+        Op::FnCall(expression.name.to_string()),
+        position,
+    ));
 
     expression
         .args

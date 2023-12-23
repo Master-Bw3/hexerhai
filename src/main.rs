@@ -97,7 +97,7 @@ fn run() -> Result<(), Box<EvalAltResult>> {
     engine.disable_symbol("<<");
     engine.disable_symbol(">>");
 
-    let ast = engine.compile(source)?;
+    let ast = engine.compile(&source)?;
 
     let translated_ast = translate_flattened_ast(flattern_ast(ast.statements()));
 
@@ -107,9 +107,7 @@ fn run() -> Result<(), Box<EvalAltResult>> {
         great_spell_sigs: PatternRegistry::gen_default_great_sigs(),
     };
 
-    let pattern_registry = PatternRegistry::construct(&config.great_spell_sigs);
-
-    let interpreter_result = interpret(AstNode::Program(translated_ast), &config, HashMap::new(), "", "");
+    let interpreter_result = interpret(AstNode::Program(translated_ast), &config, HashMap::new(), &source, "");
 
         match interpreter_result {
             Ok(result) => println!(
@@ -118,7 +116,7 @@ fn run() -> Result<(), Box<EvalAltResult>> {
                 result.buffer
             ),
             Err(err) => {
-                print_interpreter_error(err,"", "");
+                print_interpreter_error(err, &source, "test.rhai");
             }
         };
 
