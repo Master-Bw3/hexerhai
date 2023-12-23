@@ -88,10 +88,14 @@ fn flatten_expression(expression: Expr) -> Vec<FlatNode> {
             flattened_ast.push(FlatNode::StringLiteral(val.to_string(), position))
         }
         Expr::DynamicConstant(val, position) => flattened_ast.push(FlatNode::DynamicConstant(val, position)),
+        Expr::Array(val, position) => {
+            flattened_ast.push(FlatNode::Op(Op::FnCall("last_n_list".to_string()), position));
+            flattened_ast.push(FlatNode::NumberLiteral(val.len() as f64, position));
+            val.into_iter().rev().for_each(|v| flattened_ast.append(&mut flatten_expression(v)));
+        },
 
         Expr::InterpolatedString(_, _) => todo!(),
 
-        Expr::Array(_, _) => todo!(),
         Expr::Map(_, _) => todo!(),
         Expr::Unit(_) => todo!(),
 
