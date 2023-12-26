@@ -7,8 +7,7 @@ use hexagon::{
 use rhai::Position;
 
 use crate::{
-    flatten_ast::FlatNode,
-    translate_dynamic::{self, translate_dynamic_to_iota},
+    flatten_ast::FlatNode, translate_dynamic::translate_dynamic_to_iota,
     translate_ops::translate_op,
 };
 
@@ -62,26 +61,56 @@ pub fn translate_node(node: FlatNode) -> Vec<AstNode> {
             succeed,
             fail,
             position,
-        } => translated.push(AstNode::IfBlock {
-            condition: Box::new(AstNode::Block {
-                external: false,
-                nodes: condition.into_iter().flat_map(translate_node).collect(),
-            }),
-            succeed: Box::new(AstNode::Block {
-                external: false,
-                nodes: succeed.into_iter().flat_map(translate_node).collect(),
-            }),
-            fail: fail.map(|f| {
-                Box::new(AstNode::Block {
-                    external: false,
-                    nodes: f.into_iter().flat_map(translate_node).collect(),
-                })
-            }),
-            location: position_to_location(position),
-        }),
+        } => translated.push(translate_if(condition, succeed, fail, position)),
+        FlatNode::WhileBlock {
+            do_while,
+            condition,
+            block,
+            position,
+        } => translated.push(translate_while(do_while, condition, block, position)),
     };
 
     return translated;
+}
+
+fn translate_if(
+    condition: Vec<FlatNode>,
+    succeed: Vec<FlatNode>,
+    fail: Option<Vec<FlatNode>>,
+    position: Position,
+) -> AstNode {
+    AstNode::IfBlock {
+        condition: Box::new(AstNode::Block {
+            external: false,
+            nodes: condition.into_iter().flat_map(translate_node).collect(),
+        }),
+        succeed: Box::new(AstNode::Block {
+            external: false,
+            nodes: succeed.into_iter().flat_map(translate_node).collect(),
+        }),
+        fail: fail.map(|f| {
+            Box::new(AstNode::Block {
+                external: false,
+                nodes: f.into_iter().flat_map(translate_node).collect(),
+            })
+        }),
+        location: position_to_location(position),
+    }
+}
+
+fn translate_while(do_while: bool, condition: Vec<FlatNode>, block: Vec<FlatNode>, position: Position) -> AstNode {
+    AstNode::WhileBlock {
+        do_while,
+        condition: Box::new(AstNode::Block {
+            external: false,
+            nodes: condition.into_iter().flat_map(translate_node).collect(),
+        }),
+        block: Box::new(AstNode::Block {
+            external: false,
+            nodes: block.into_iter().flat_map(translate_node).collect(),
+        }),
+        location: position_to_location(position),
+    }
 }
 
 pub fn position_to_location(position: Position) -> Location {

@@ -1,19 +1,11 @@
 //! This script runs for-loops.
+let i = 0;
 
-let x = 2;
+do {
+    i += 1;
+} until (i == 5);
 
 
-if ((x > 3) & (x != 12)) {
-    print(x);
-    print("2");
 
-} else if (x == 1) {
-    print("elif");
-    print("2");
 
-} else {
-    print("else");
-    print("2");
-
-}
-
+print(i)

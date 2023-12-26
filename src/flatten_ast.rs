@@ -1,6 +1,6 @@
 use std::ops::Not;
 
-use rhai::{Dynamic, Expr, FlowControl, FnCallExpr, Ident, Position, Stmt};
+use rhai::{ASTFlags, Dynamic, Expr, FlowControl, FnCallExpr, Ident, Position, Stmt};
 use smallvec::SmallVec;
 
 pub fn flatten_statements(ast: &[Stmt]) -> Vec<FlatNode> {
@@ -23,19 +23,33 @@ pub fn flatten_statements(ast: &[Stmt]) -> Vec<FlatNode> {
                     panic!()
                 };
 
-                flattened_ast_statment.push(FlatNode::Op(Op::Store(variable), position));
-                flattened_ast_statment.append(&mut flatten_expression(data.1.rhs.clone()));
+                flattened_ast_statment.push(FlatNode::Op(Op::Store(variable.clone()), position));
+                if let Some(op) = data.0.clone().get_op_assignment_info().map(|x| x.5) {
+                    flattened_ast_statment.push(FlatNode::Op(Op::FnCall(op.to_string()), position));
+                    flattened_ast_statment.append(&mut flatten_expression(data.1.rhs.clone()));
+                    flattened_ast_statment.push(FlatNode::Op(Op::Push(variable), position));
+                } else {
+                    flattened_ast_statment.append(&mut flatten_expression(data.1.rhs.clone()));
+                }
             }
             Stmt::FnCall(expr, position) => flattened_ast_statment
                 .append(&mut flatten_fn_call_expression(*expr.clone(), *position)),
             Stmt::If(data, position) => {
                 flattened_ast_statment.append(&mut flatten_if(data, *position))
             }
+            Stmt::While(data, position) => {
+                flattened_ast_statment.append(&mut flatten_while(true, false, data, *position))
+            }
+            Stmt::Do(data, flag, position) => {
+                if let ASTFlags::NEGATED = *flag {
+                    flattened_ast_statment.append(&mut flatten_while(true, true, data, *position))
+                } else {
+                    flattened_ast_statment.append(&mut flatten_while(true, false, data, *position))
+                }
+            }
 
             Stmt::Noop(_) => todo!(),
             Stmt::Switch(_, _) => todo!(),
-            Stmt::While(_, _) => todo!(),
-            Stmt::Do(_, _, _) => todo!(),
             Stmt::For(_, _) => todo!(),
             Stmt::Block(_) => todo!(),
             Stmt::TryCatch(_, _) => todo!(),
@@ -76,6 +90,31 @@ fn flatten_if(data: &Box<FlowControl>, position: Position) -> Vec<FlatNode> {
             position,
         },
     ];
+}
+
+fn flatten_while(
+    do_while: bool,
+    negate_condition: bool,
+    data: &Box<FlowControl>,
+    position: Position,
+) -> Vec<FlatNode> {
+    let mut condition = flatten_expression(data.expr.clone())
+        .into_iter()
+        .rev()
+        .collect::<Vec<_>>();
+
+    if negate_condition {
+        condition.push(FlatNode::Op(Op::FnCall("not".to_string()), position))
+    }
+
+    let block = flatten_statements(data.body.statements());
+
+    return vec![FlatNode::WhileBlock {
+        do_while,
+        condition: condition,
+        block: block,
+        position,
+    }];
 }
 
 fn flatten_var(data: (Ident, Expr)) -> Vec<FlatNode> {
@@ -216,6 +255,12 @@ pub enum FlatNode {
         condition: Vec<FlatNode>,
         succeed: Vec<FlatNode>,
         fail: Option<Vec<FlatNode>>,
+        position: Position,
+    },
+    WhileBlock {
+        do_while: bool,
+        condition: Vec<FlatNode>,
+        block: Vec<FlatNode>,
         position: Position,
     },
     NumberLiteral(f64, Position),

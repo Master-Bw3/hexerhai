@@ -29,8 +29,13 @@ fn main() -> Result<(), Box<EvalAltResult>> {
     engine.disable_symbol("<<");
     engine.disable_symbol(">>");
 
+    engine.set_strict_variables(true);
+
+
     let ast = engine.compile(source)?;
 
+    println!("\neval\n");
+    
     engine.eval_ast(&ast)?;
 
     println!("Ast: {:#?}", ast.statements());
@@ -97,6 +102,7 @@ fn run() -> Result<(), Box<EvalAltResult>> {
     engine.disable_symbol("<<");
     engine.disable_symbol(">>");
 
+    
     let ast = engine.compile(&source)?;
 
     let translated_ast = translate_flattened_ast(flatten_statements(ast.statements()));

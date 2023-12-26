@@ -41,7 +41,7 @@ fn translate_fn_call(fn_name: String, location: Location) -> Vec<AstNode> {
         "??" => todo!(),
 
         "+" => vec![AstNode::Action { location, name: "add".to_string(), value: None }],
-        "-" => vec![AstNode::Action { location, name: "subtract".to_string(), value: None }],
+        "-" => vec![AstNode::Action { location, name: "sub".to_string(), value: None }],
         "*" => vec![AstNode::Action { location, name: "mul_dot".to_string(), value: None }],
         "/" => vec![AstNode::Action { location, name: "div_cross".to_string(), value: None }],
         "%" => vec![AstNode::Action { location, name: "modulo".to_string(), value: None }],
